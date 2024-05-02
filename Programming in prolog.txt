@@ -1,0 +1,83 @@
+% Representacion [CI,MI,B,CD,MD]
+inicio([3,3,left,0,0]). %Estado inicial, tres canibales y tres misioneros en el lado izquierdo
+meta([0,0,right,3,3]). %Estado que se busca tener, tres canibales y tres misioneros de lado derecho
+
+legal(CI,MI,CD,MD) :-   % Verifica que es un estado legal
+    MI>=0, CI>=0, MD>=0, CD>=0, % No hay números negativos de misioneros o caníbales en ningún lado.
+    (MI>=CI ; MI=0),  %Los misioneros no son superados en número por los caníbales en el mismo lado,
+    % o no hay misioneros en ese lado.
+    (MD>=CD ; MD=0). % Lo anterior pero del lado contrario 
+
+ % Posibles movimientos:
+move([CI,MI,left,CD,MD],[CI,MI2,right,CD,MD2]):-  % Dos misioneros cruzan de izquierda a derecha.
+    MD2 is MD+2, % Incrementa misioneros en el lado derecho.
+    MI2 is MI-2,  % Decrementa misioneros en el lado izquierdo.
+    legal(CI,MI2,CD,MD2).  % Verifica la legalidad del estado resultante.
+
+move([CI,MI,left,CD,MD],[CI2,MI,right,CD2,MD]):-   % Dos caníbales cruzan de izquierda a derecha.
+    CD2 is CD+2,  % Incrementa caníbales en el lado derecho.
+    CI2 is CI-2,  % Decrementa caníbales en el lado izquierdo.
+    legal(CI2,MI,CD2,MD). % Verifica la legalidad del estado resultante.
+
+
+move([CI,MI,left,CD,MD],[CI2,MI2,right,CD2,MD2]):-  % Un misionero y un caníbal cruzan de izquierda a derecha
+    CD2 is CD+1,  % Incrementa caníbales en el lado derecho.
+    CI2 is CI-1,  % Decrementa caníbales en el lado izquierdo.
+    MD2 is MD+1,  % Incrementa misioneros en el lado derecho.
+    MI2 is MI-1,  % Decrementa misioneros en el lado izquierdo.
+    legal(CI2,MI2,CD2,MD2).   % Verifica la legalidad del estado resultante.
+
+move([CI,MI,left,CD,MD],[CI,MI2,right,CD,MD2]):-    % Un misionero cruza de izquierda a derecha.
+    MD2 is MD+1,  % Incrementa misioneros en el lado derecho.
+    MI2 is MI-1,   % Decrementa misioneros en el lado izquierdo.
+    legal(CI,MI2,CD,MD2).  % Verifica la legalidad del estado resultante.
+
+move([CI,MI,left,CD,MD],[CI2,MI,right,CD2,MD]):-    % Un caníbal cruza de izquierda a derecha.
+    CD2 is CD+1,    % Incrementa caníbales en el lado derecho.
+    CI2 is CI-1,    % Decrementa caníbales en el lado izquierdo
+    legal(CI2,MI,CD2,MD).   % Verifica la legalidad del estado resultante.
+
+move([CI,MI,right,CD,MD],[CI,MI2,left,CD,MD2]):- % Dos misioneros cruzan de derecha a izquierda.
+    MD2 is MD-2,  % Decrementa misioneros en el lado derecho.
+    MI2 is MI+2,  % Incrementa misioneros en el lado izquierdo.
+    legal(CI,MI2,CD,MD2).  % Verifica la legalidad del estado resultante.
+
+move([CI,MI,right,CD,MD],[CI2,MI,left,CD2,MD]):-  % Dos caníbales cruzan de derecha a izquierda.
+    CD2 is CD-2,   % Decrementa caníbales en el lado derecho.
+    CI2 is CI+2,    % Incrementa caníbales en el lado izquierdo.
+    legal(CI2,MI,CD2,MD).   % Verifica la legalidad del estado resultante.
+
+move([CI,MI,right,CD,MD],[CI2,MI2,left,CD2,MD2]):-  % Un misionero y un caníbal cruzan de derecha a izquierda.
+    CD2 is CD-1,   % Decrementa caníbales en el lado derecho.
+    CI2 is CI+1,   % Incrementa caníbales en el lado izquierdo.
+    MD2 is MD-1,   % Decrementa misioneros en el lado derecho.
+    MI2 is MI+1,   % Incrementa misioneros en el lado izquierdo.
+    legal(CI2,MI2,CD2,MD2).    % Verifica la legalidad del estado resultante.
+
+move([CI,MI,right,CD,MD],[CI,MI2,left,CD,MD2]):-   % Un misionero cruza de derecha a izquierda.
+    MD2 is MD-1,  % Decrementa misioneros en el lado derecho.
+    MI2 is MI+1,   % Incrementa misioneros en el lado izquierdo.
+    legal(CI,MI2,CD,MD2).   % Verifica la legalidad del estado resultante.
+
+move([CI,MI,right,CD,MD],[CI2,MI,left,CD2,MD]):-    % Un caníbal cruza de derecha a izquierda.
+    CD2 is CD-1,    % Decrementa caníbales en el lado derecho.
+    CI2 is CI+1,    % Incrementa caníbales en el lado izquierdo.
+    legal(CI2,MI,CD2,MD).    % Verifica la legalidad del estado resultante.
+
+% Llamamda recursiva para resolver el problema 
+path([CI1,MI1,B1,CD1,MD1],[CI2,MI2,B2,CD2,MD2],Explored,MovesList) :- 
+   move([CI1,MI1,B1,CD1,MD1],[CI3,MI3,B3,CD3,MD3]), 
+   not(member([CI3,MI3,B3,CD3,MD3],Explored)),  % Asegura que el nuevo estado no se haya explorado antes.
+   path([CI3,MI3,B3,CD3,MD3],[CI2,MI2,B2,CD2,MD2],[[CI3,MI3,B3,CD3,MD3]|Explored],[ [[CI3,MI3,B3,CD3,MD3],[CI1,MI1,B1,CD1,MD1]] | MovesList ]).  % Continúa la búsqueda recursiva.
+
+
+path([CI,MI,B,CD,MD],[CI,MI,B,CD,MD],_,MovesList):-  %Solucion encontrada
+    output(MovesList).   % Imprime la lista de movimientos que lleva a la solución.
+
+output([]) :- nl. % Finaliza la impresión si la lista está vacía.
+output([[A,B]|MovesList]) :- 
+    output(MovesList),   % Llama recursivamente para imprimir el resto de movimientos.
+    write(B), write(' -> '), write(A), nl.   % Imprime el movimiento actual de B a A.
+
+encuentra_sol :- % Encuentra la solución
+   path([3,3,left,0,0],[0,0,right,3,3],[[3,3,left,0,0]],_).  % Inicia la búsqueda desde el estado inicial hacia el estado objetivo.
